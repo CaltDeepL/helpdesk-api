@@ -1,0 +1,75 @@
+spring:
+  application:
+    name: helpdesk-api
+
+  # 2026年のデファクト。ブロッキング記述のまま高い並行性を得る。
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/helpdesk}
+    username: ${DATABASE_USERNAME:helpdesk}
+    password: ${DATABASE_PASSWORD:helpdesk_local_password}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 3000
+
+  jpa:
+    open-in-view: false        # ビュー層での遅延ロードを禁止（N+1 とトランザクション境界の曖昧化を防ぐ）
+    hibernate:
+      ddl-auto: validate       # スキーマ変更は Flyway のみが行う
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    db:
+      enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  api-docs:
+    path: /v3/api-docs
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
+
+logging:
+  level:
+    root: INFO
+    com.caltdeepl.helpdesk: DEBUG

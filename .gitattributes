@@ -1,0 +1,6 @@
+# Gradle Wrapper の JAR ファイルを明示的にバイナリとして指定
+*.jar binary
+
+# gradlew スクリプトの改行コードは Linux/macOS 用に LF で固定する
+gradlew text eol=lf
+gradlew.bat text eol=crlf

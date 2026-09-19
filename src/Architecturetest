@@ -1,0 +1,106 @@
+package com.caltdeepl.helpdesk.architecture;
+
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+
+import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.library.Architectures;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+/**
+ * アーキテクチャ制約をテストで強制する（NFR-5.1）。
+ *
+ * <p>レビューの指摘に頼らず、違反したらビルドが落ちる状態にしておく。 パッケージ構成は「機能優先（package by feature）」とし、各機能配下に
+ * controller / service / repository / domain を置く。
+ */
+class ArchitectureTest {
+
+    private static final String BASE_PACKAGE = "com.caltdeepl.helpdesk";
+
+    private static JavaClasses classes;
+
+    @BeforeAll
+    static void importClasses() {
+        classes = new ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages(BASE_PACKAGE);
+    }
+
+    @Test
+    @DisplayName("レイヤーの依存方向は controller → service → repository の一方向である")
+    void layerDependenciesAreRespected() {
+        Architectures.layeredArchitecture()
+                .consideringOnlyDependenciesInLayers()
+                .layer("Controller")
+                .definedBy("..controller..")
+                .layer("Service")
+                .definedBy("..service..")
+                .layer("Repository")
+                .definedBy("..repository..")
+                .whereLayer("Controller")
+                .mayNotBeAccessedByAnyLayer()
+                .whereLayer("Service")
+                .mayOnlyBeAccessedByLayers("Controller")
+                .whereLayer("Repository")
+                .mayOnlyBeAccessedByLayers("Service")
+                .allowEmptyShould(true)
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("Controller は Repository を直接呼ばない")
+    void controllersDoNotAccessRepositoriesDirectly() {
+        noClasses()
+                .that()
+                .resideInAPackage("..controller..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("..repository..")
+                .allowEmptyShould(true)
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("エンティティは controller 層に露出しない")
+    void entitiesAreNotExposedToControllers() {
+        noClasses()
+                .that()
+                .resideInAPackage("..controller..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("..entity..")
+                .allowEmptyShould(true)
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("Controller クラスの命名は Controller で終わる")
+    void controllersAreNamedProperly() {
+        classes().that()
+                .resideInAPackage("..controller..")
+                .and()
+                .areNotNestedClasses()
+                .should()
+                .haveSimpleNameEndingWith("Controller")
+                .allowEmptyShould(true)
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("java.util.Date / Calendar を使わない（java.time を使う）")
+    void legacyDateApiIsNotUsed() {
+        noClasses()
+                .should()
+                .dependOnClassesThat()
+                .haveFullyQualifiedName("java.util.Date")
+                .orShould()
+                .dependOnClassesThat()
+                .haveFullyQualifiedName("java.util.Calendar")
+                .allowEmptyShould(true)
+                .check(classes);
+    }
+}
