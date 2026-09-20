@@ -1,12 +1,12 @@
 # Gradle Version Catalog
 # バージョンはここで一元管理する。個別の build.gradle.kts に直接書かない。
 [versions]
-springBoot = "4.1.0"
+springBoot = "4.1.1"
 springDependencyManagement = "1.1.7"
 spotless = "8.0.0"
 palantirJavaFormat = "2.75.0"
 dependencyCheck = "12.1.9"
-springdoc = "3.0.0"
+springdoc = "3.1.1"
 archunit = "1.4.1"
 testcontainers = "1.21.3"
 jjwt = "0.13.0"
