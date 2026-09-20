@@ -10,7 +10,7 @@ springdoc = "3.1.1"
 archunit = "1.5.0"
 testcontainers = "1.21.3"
 jjwt = "0.13.0"
-logstashEncoder = "8.1"
+logstashEncoder = "9.0"
 jacoco = "0.8.14"
 checkstyle = "14.1.0"
 [libraries]
