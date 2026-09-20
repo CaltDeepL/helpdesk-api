@@ -97,6 +97,74 @@ Audit              success
 
 `Audit` は NVD 外部障害の影響を受けるため Required check には含めない。
 
+## GitHub 設定
+
+### Merge
+
+```text
+Squash merge       : ON
+Merge commit       : OFF
+Rebase merge       : OFF
+Auto-delete branch : ON
+```
+
+### main Ruleset
+
+Ruleset:
+
+```text
+main protection
+```
+
+設定:
+
+```text
+Enforcement                     Active
+Target                          default branch
+Deletion                        blocked
+Force push                      blocked
+Linear history                  required
+Pull Request                    required
+Required approvals              0
+Conversation resolution         required
+Branch up-to-date               required
+Bypass                          none
+```
+
+Required status checks:
+
+```text
+Format
+Lint
+Test
+Docker Build
+```
+
+### Actions
+
+```text
+GITHUB_TOKEN       : read-only
+Create/approve PR  : disabled
+Artifact retention : 14 days
+```
+
+workflow 側にも最小権限を明示する。
+
+```yaml
+permissions:
+  contents: read
+```
+
+### Code security
+
+```text
+Dependency graph            : ON
+Dependabot alerts           : ON
+Dependabot security updates : ON
+Secret scanning             : ON（利用可能な場合）
+Push protection             : ON（利用可能な場合）
+```
+
 ## NVD 障害時の運用
 
 `NVD_API_KEY` は Task #0 の必須条件にしない。
@@ -128,37 +196,12 @@ Docker Build
 
 は NVD の状態に依存させない。
 
-## GitHub Ruleset
+NVD 復旧後:
 
-Ruleset:
-
-```text
-main protection
-```
-
-設定:
-
-```text
-Enforcement                     Active
-Target                          default branch
-Deletion                        blocked
-Force push                      blocked
-Linear history                  required
-Pull Request                    required
-Required approvals              0
-Conversation resolution         required
-Branch up-to-date               required
-Bypass                          none
-```
-
-Required status checks:
-
-```text
-Format
-Lint
-Test
-Docker Build
-```
+1. `NVD_API_KEY` を GitHub Secret に登録
+2. `NVD_DEGRADED` を削除または `false`
+3. Security Audit を手動実行
+4. 脆弱性情報を再取得・確認
 
 ## つまずいた点と教訓
 
