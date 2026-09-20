@@ -1,0 +1,65 @@
+version: 2
+updates:
+  # ---------------------------------------------------------------------------
+  # Gradle: アプリの依存ライブラリ
+  #   Spring 系・テスト系はまとめて 1 PR にする。
+  #   グループ化しないと毎週 5〜8 本の PR が飛んできて、結局見なくなるため。
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 5
+    groups:
+      spring:
+        patterns:
+          - "org.springframework*"
+          - "org.springdoc*"
+      test:
+        patterns:
+          - "org.testcontainers*"
+          - "org.junit*"
+          - "com.tngtech.archunit*"
+    labels:
+      - dependencies
+      - java
+    commit-message:
+      prefix: "chore(deps)"
+
+  # ---------------------------------------------------------------------------
+  # GitHub Actions: ワークフローで使う action のバージョン
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: "chore(ci)"
+
+  # ---------------------------------------------------------------------------
+  # Docker: Dockerfile のベースイメージ（eclipse-temurin:25-jdk / 25-jre）
+  #   JRE/JDK のパッチ更新はセキュリティ修正を含むため、検知経路を必ず持つ。
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - docker
+    commit-message:
+      prefix: "chore(docker)"
