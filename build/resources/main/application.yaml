@@ -2,6 +2,12 @@ spring:
   application:
     name: helpdesk-api
 
+  jackson:
+    default-property-inclusion: non_null
+    datatype:
+      datetime:
+        write-dates-as-timestamps: false
+
   # 2026年のデファクト。ブロッキング記述のまま高い並行性を得る。
   threads:
     virtual:
@@ -30,11 +36,6 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: false
-
-  jackson:
-    default-property-inclusion: non_null
-    serialization:
-      write-dates-as-timestamps: false
 
 server:
   port: ${SERVER_PORT:8080}

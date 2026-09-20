@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!--
+  helpdesk-api コーディング規約（Checkstyle）
+
+  方針:
+    - フォーマット（インデント・改行・空白）は Spotless が自動整形するため
+      Checkstyle では扱わない。二重管理を避ける。
+    - Checkstyle は「整形では直せないもの」= 命名・構造・設計上の禁止事項に絞る。
+-->
+<module name="Checker">
+  <property name="charset" value="UTF-8"/>
+  <property name="severity" value="warning"/>
+  <property name="fileExtensions" value="java"/>
+
+  <!-- ファイル末尾は改行で終わる -->
+  <module name="NewlineAtEndOfFile"/>
+
+  <!-- タブ禁止（インデントは半角スペース 4） -->
+  <module name="FileTabCharacter">
+    <property name="eachLine" value="true"/>
+  </module>
+
+  <module name="TreeWalker">
+
+    <!-- ============ 命名規約 ============ -->
+    <module name="PackageName">
+      <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+    </module>
+    <module name="TypeName"/>
+    <module name="MethodName">
+      <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+    </module>
+    <module name="ParameterName">
+      <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+    </module>
+    <module name="LocalVariableName">
+      <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+    </module>
+    <module name="MemberName">
+      <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+    </module>
+    <module name="ConstantName"/>
+    <module name="RecordComponentName">
+      <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+    </module>
+
+    <!-- ============ import ============ -->
+    <!-- ワイルドカード import 禁止（どこから来た型か追えなくなるため） -->
+    <module name="AvoidStarImport"/>
+    <module name="UnusedImports"/>
+    <module name="RedundantImport"/>
+
+    <!-- ============ 構造・複雑度 ============ -->
+    <!-- if / for / while は 1 行でも必ず波括弧をつける -->
+    <module name="NeedBraces"/>
+    <module name="EmptyBlock">
+      <property name="option" value="TEXT"/>
+    </module>
+    <module name="FallThrough"/>
+    <module name="MissingSwitchDefault"/>
+    <module name="SimplifyBooleanExpression"/>
+    <module name="SimplifyBooleanReturn"/>
+    <module name="EqualsHashCode"/>
+    <module name="StringLiteralEquality"/>
+    <module name="OneTopLevelClass"/>
+    <module name="MultipleVariableDeclarations"/>
+
+    <!-- メソッドは 60 行以内。超えるなら分割を検討する -->
+    <module name="MethodLength">
+      <property name="max" value="60"/>
+      <property name="countEmpty" value="false"/>
+    </module>
+    <!-- 引数 7 個以上はオブジェクトにまとめる -->
+    <module name="ParameterNumber">
+      <property name="max" value="6"/>
+    </module>
+    <!-- 循環的複雑度 -->
+    <module name="CyclomaticComplexity">
+      <property name="max" value="12"/>
+    </module>
+    <module name="NestedIfDepth">
+      <property name="max" value="3"/>
+    </module>
+
+    <!-- ============ 禁止事項 ============ -->
+    <!-- System.out / System.err での出力禁止（ログは SLF4J を使う） -->
+    <module name="Regexp">
+      <property name="format" value="System\.(out|err)\.print"/>
+      <property name="illegalPattern" value="true"/>
+      <property name="message" value="標準出力ではなく SLF4J のロガーを使用してください"/>
+    </module>
+    <!-- printStackTrace 禁止 -->
+    <module name="Regexp">
+      <property name="format" value="\.printStackTrace\(\)"/>
+      <property name="illegalPattern" value="true"/>
+      <property name="message" value="printStackTrace ではなくロガーに例外を渡してください"/>
+    </module>
+    <!-- java.util.Date / Calendar 禁止（java.time を使う） -->
+    <module name="IllegalImport">
+      <property name="illegalClasses"
+                value="java.util.Date, java.util.Calendar, java.sql.Date, java.sql.Timestamp"/>
+    </module>
+    <!-- 汎用例外の throw 禁止 -->
+    <module name="IllegalThrows">
+      <property name="illegalClassNames" value="Throwable, Error, RuntimeException, Exception"/>
+    </module>
+    <!-- 引数・フィールドに Optional を使わない（戻り値のみ許可） -->
+    <module name="IllegalType">
+      <property name="illegalClassNames" value="java.util.Optional"/>
+      <property name="tokens" value="PARAMETER_DEF"/>
+      <property name="memberModifiers" value="LITERAL_PUBLIC, LITERAL_PROTECTED, LITERAL_PRIVATE"/>
+    </module>
+
+    <!-- ============ その他 ============ -->
+    <module name="FinalClass"/>
+    <module name="HideUtilityClassConstructor">
+      <property name="ignoreAnnotatedBy" value="SpringBootApplication"/>
+    </module>
+    <module name="InterfaceIsType"/>
+    <module name="VisibilityModifier">
+      <property name="protectedAllowed" value="false"/>
+      <property name="packageAllowed" value="false"/>
+    </module>
+    <module name="TodoComment">
+      <property name="format" value="(FIXME)"/>
+      <property name="severity" value="error"/>
+    </module>
+  </module>
+</module>

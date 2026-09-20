@@ -113,7 +113,7 @@ configure<SpotlessExtension> {
 // Checkstyle: 命名・構造のルール
 // ---------------------------------------------------------------------------
 checkstyle {
-    toolVersion = "11.2.0"
+    toolVersion = libs.versions.checkstyle.get()
     configFile = file("config/checkstyle/checkstyle.xml")
     maxWarnings = 0
     isIgnoreFailures = false
@@ -129,13 +129,14 @@ tasks.withType<Test>().configureEach {
     }
 }
 
-val integrationTestTask = tasks.register<Test>("integrationTest") {
-    description = "Testcontainers を用いた結合テストを実行する"
-    group = "verification"
-    testClassesDirs = integrationTest.output.classesDirs
-    classpath = integrationTest.runtimeClasspath
-    shouldRunAfter(tasks.test)
-}
+val integrationTestTask =
+    tasks.register<Test>("integrationTest") {
+        description = "Testcontainers を用いた結合テストを実行する"
+        group = "verification"
+        testClassesDirs = integrationTest.output.classesDirs
+        classpath = integrationTest.runtimeClasspath
+        shouldRunAfter(tasks.test)
+    }
 
 tasks.check {
     dependsOn(integrationTestTask)
@@ -174,16 +175,51 @@ tasks.jacocoTestCoverageVerification {
 
 // ---------------------------------------------------------------------------
 // OWASP Dependency-Check: 依存ライブラリの脆弱性検査
-//   NVD API キーを設定すると取得が大幅に速くなる（環境変数 NVD_API_KEY）
+//
+//   通常時   : NVD API キー（環境変数 NVD_API_KEY）を使って差分更新する
+//   NVD障害時: -PnvdAutoUpdate=false を付けて起動し、NVD に一切アクセスせず
+//              キャッシュ済みのローカル DB だけで解析する
+//
+//   注意: キーを外しても障害の回避にはならない。キーの有無はレート制限が
+//        変わるだけで、接続先は同じ NVD の API。障害時に必要なのは
+//        「NVD を叩かないこと」であり、それが autoUpdate=false にあたる。
 // ---------------------------------------------------------------------------
+val nvdApiKey: String = System.getenv("NVD_API_KEY").orEmpty()
+
+// NVD 障害時のフォールバック用。既定は true（通常どおり更新する）
+val nvdAutoUpdate: Boolean =
+    (findProperty("nvdAutoUpdate") as String?)?.toBooleanStrictOrNull() ?: true
+
+// 自前・社内ミラーの NVD データフィードがあれば指定する（任意）
+val nvdDatafeedUrl: String = System.getenv("NVD_DATAFEED_URL").orEmpty()
+
 dependencyCheck {
     failBuildOnCVSS = 7.0f
-    nvd { apiKey = System.getenv("NVD_API_KEY") ?: "" }
+
+    // NVD に到達できないことを「脆弱性あり」と混同しない。
+    // 更新を試みる通常時のみ、解析エラーでビルドを落とす。
+    failOnError = nvdAutoUpdate
+    autoUpdate = nvdAutoUpdate
+
+    nvd {
+        apiKey = nvdApiKey
+        // キーなしは 5req/30秒の制限。間隔を空けないと 429 で弾かれる
+        delay = if (nvdApiKey.isBlank()) 6000 else 2000
+        maxRetryCount = 20
+        if (nvdDatafeedUrl.isNotBlank()) {
+            datafeedUrl = nvdDatafeedUrl
+        }
+    }
+
     analyzers {
         assemblyEnabled = false
         nodeAuditEnabled = false
         nodeEnabled = false
+        // OSS Index は NVD とは独立した脆弱性ソース。
+        // NVD が落ちている間もこちらは生きていることが多い。
+        ossIndexEnabled = true
     }
+
     suppressionFile = "config/dependency-check-suppressions.xml"
 }
 

@@ -12,7 +12,7 @@ testcontainers = "1.21.3"
 jjwt = "0.13.0"
 logstashEncoder = "8.1"
 jacoco = "0.8.14"
-
+checkstyle = "14.1.0"
 [libraries]
 springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
 archunit = { module = "com.tngtech.archunit:archunit", version.ref = "archunit" }
