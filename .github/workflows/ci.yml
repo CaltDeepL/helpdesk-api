@@ -1,0 +1,227 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      nvd_degraded:
+        description: "NVD 障害時の縮退モード（キャッシュ済み DB のみで解析）"
+        type: boolean
+        default: false
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# GITHUB_TOKEN の既定権限を最小にする。
+# リポジトリ設定（Settings → Actions → Workflow permissions）でも read-only にするが、
+# 設定は後から変更されうるためワークフロー側にも明示し、PR のレビュー対象に載せる。
+permissions:
+  contents: read
+
+env:
+  JAVA_VERSION: "25"
+  JAVA_DISTRIBUTION: temurin
+
+jobs:
+  # -------------------------------------------------------------------------
+  # 1. フォーマット: Spotless で整形済みかを確認する
+  # -------------------------------------------------------------------------
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      # gradle-wrapper.jar はバイナリをリポジトリに含めるため、
+      # 既知のリリースと一致するかを検証してから使う
+      - uses: gradle/actions/wrapper-validation@v5
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Spotless check
+        run: ./gradlew --no-daemon spotlessCheck
+
+  # -------------------------------------------------------------------------
+  # 2. 静的解析: Checkstyle
+  # -------------------------------------------------------------------------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      # gradle-wrapper.jar はバイナリをリポジトリに含めるため、
+      # 既知のリリースと一致するかを検証してから使う
+      - uses: gradle/actions/wrapper-validation@v5
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Checkstyle
+        run: ./gradlew --no-daemon checkstyleMain checkstyleTest
+      - name: Upload Checkstyle report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkstyle-report
+          path: build/reports/checkstyle/
+
+  # -------------------------------------------------------------------------
+  # 3. テスト: 単体テスト + アーキテクチャテスト + 結合テスト
+  # -------------------------------------------------------------------------
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      # gradle-wrapper.jar はバイナリをリポジトリに含めるため、
+      # 既知のリリースと一致するかを検証してから使う
+      - uses: gradle/actions/wrapper-validation@v5
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Unit test
+        run: ./gradlew --no-daemon test
+
+      - name: Integration test (Testcontainers)
+        run: ./gradlew --no-daemon integrationTest
+
+      - name: Coverage report
+        run: ./gradlew --no-daemon jacocoTestReport
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            build/reports/tests/
+            build/reports/jacoco/
+
+  # -------------------------------------------------------------------------
+  # 4. 脆弱性検査: OWASP Dependency-Check
+  #
+  #    NVD 障害時の縮退モード:
+  #      リポジトリ変数 NVD_DEGRADED=true、または手動実行時の入力で
+  #      -PnvdAutoUpdate=false を付け、NVD に一切アクセスせず
+  #      キャッシュ済みの DB だけで解析する。
+  #
+  #    このジョブは必須ステータスチェックに含めない（外部要因で落ちるため）。
+  #    continue-on-error により、失敗してもワークフロー全体は成功扱いにする。
+  # -------------------------------------------------------------------------
+  audit:
+    name: Audit
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      - uses: gradle/actions/wrapper-validation@v5
+      - uses: gradle/actions/setup-gradle@v5
+
+      # 縮退モードの判定。
+      #   - 手動実行で nvd_degraded=true が指定された
+      #   - リポジトリ変数 NVD_DEGRADED=true が設定されている
+      #   - NVD_API_KEY が未登録（キーなしでの全件取得は現実的でない）
+      - name: Resolve NVD mode
+        id: nvd
+        env:
+          DISPATCH_DEGRADED: ${{ github.event.inputs.nvd_degraded }}
+          REPO_DEGRADED: ${{ vars.NVD_DEGRADED }}
+          HAS_KEY: ${{ secrets.NVD_API_KEY != '' }}
+        run: |
+          degraded=false
+          if [ "$DISPATCH_DEGRADED" = "true" ] || [ "$REPO_DEGRADED" = "true" ]; then
+            degraded=true
+          fi
+          if [ "$HAS_KEY" != "true" ]; then
+            echo "::warning::NVD_API_KEY が未設定のため縮退モードで実行します"
+            degraded=true
+          fi
+          echo "degraded=$degraded" >> "$GITHUB_OUTPUT"
+          echo "NVD degraded mode: $degraded"
+
+      # NVD のローカル DB をキャッシュする。
+      # 縮退モードではこのキャッシュだけが解析のデータ源になるため、
+      # restore-keys で必ず直近のものを復元する。
+      - name: Cache NVD data
+        id: nvd-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/dependency-check-data
+          key: nvd-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: nvd-${{ runner.os }}-
+
+      # 縮退モードでキャッシュも無い場合は解析するデータが無いためスキップする
+      - name: Skip (no cached NVD data)
+        if: steps.nvd.outputs.degraded == 'true' && steps.nvd-cache.outputs.cache-matched-key == ''
+        run: |
+          echo "::warning::縮退モードだがキャッシュ済み NVD データが無いため Audit をスキップします"
+
+      - name: OWASP Dependency-Check
+        if: steps.nvd.outputs.degraded != 'true' || steps.nvd-cache.outputs.cache-matched-key != ''
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          NVD_DATAFEED_URL: ${{ vars.NVD_DATAFEED_URL }}
+        run: |
+          if [ "${{ steps.nvd.outputs.degraded }}" = "true" ]; then
+            echo "縮退モード: キャッシュ済み DB のみで解析します（NVD へは接続しません）"
+            ./gradlew --no-daemon dependencyCheckAnalyze -PnvdAutoUpdate=false
+          else
+            ./gradlew --no-daemon dependencyCheckAnalyze
+          fi
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: build/reports/dependency-check-report.html
+          if-no-files-found: ignore
+
+  # -------------------------------------------------------------------------
+  # 4b. NVD に依存しない脆弱性検査
+  #     GitHub Advisory Database を参照するため、NVD 障害の影響を受けない。
+  #     Audit が縮退している間の安全網として常時実行する。
+  #     ※ Dependency graph が有効なパブリックリポジトリで動作する。
+  # -------------------------------------------------------------------------
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
+
+  # -------------------------------------------------------------------------
+  # 5. Docker イメージがビルドできることの確認
+  # -------------------------------------------------------------------------
+  build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [format, lint, test]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: helpdesk-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
