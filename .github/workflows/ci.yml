@@ -40,8 +40,8 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
       # gradle-wrapper.jar はバイナリをリポジトリに含めるため、
       # 既知のリリースと一致するかを検証してから使う
-      - uses: gradle/actions/wrapper-validation@v5
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/wrapper-validation@v6
+      - uses: gradle/actions/setup-gradle@v6
       - name: Spotless check
         run: ./gradlew --no-daemon spotlessCheck
 
@@ -59,8 +59,8 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
       # gradle-wrapper.jar はバイナリをリポジトリに含めるため、
       # 既知のリリースと一致するかを検証してから使う
-      - uses: gradle/actions/wrapper-validation@v5
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/wrapper-validation@v6
+      - uses: gradle/actions/setup-gradle@v6
       - name: Checkstyle
         run: ./gradlew --no-daemon checkstyleMain checkstyleTest
       - name: Upload Checkstyle report
@@ -84,8 +84,8 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
       # gradle-wrapper.jar はバイナリをリポジトリに含めるため、
       # 既知のリリースと一致するかを検証してから使う
-      - uses: gradle/actions/wrapper-validation@v5
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/wrapper-validation@v6
+      - uses: gradle/actions/setup-gradle@v6
 
       - name: Unit test
         run: ./gradlew --no-daemon test
@@ -126,8 +126,8 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/wrapper-validation@v5
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/wrapper-validation@v6
+      - uses: gradle/actions/setup-gradle@v6
 
       # 縮退モードの判定。
       #   - 手動実行で nvd_degraded=true が指定された
