@@ -161,8 +161,8 @@ permissions:
 Dependency graph            : ON
 Dependabot alerts           : ON
 Dependabot security updates : ON
-Secret scanning             : ON（利用可能な場合）
-Push protection             : ON（利用可能な場合）
+Secret scanning             : ON
+Push protection             : ON
 ```
 
 ## NVD 障害時の運用
