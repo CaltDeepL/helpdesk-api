@@ -54,23 +54,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     /** Bean Validation のエラー。フィールド単位の内訳を errors に載せる。 */
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex,
-            HttpHeaders headers,
-            HttpStatusCode status,
-            WebRequest request) {
+            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 
         ErrorCode code = ErrorCode.VALIDATION_FAILED;
-        ProblemDetail problem =
-                ProblemDetail.forStatusAndDetail(code.status(), "入力値の検証に失敗しました");
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(code.status(), "入力値の検証に失敗しました");
         problem.setType(URI.create(PROBLEM_BASE_URI + code.slug()));
         problem.setTitle(code.title());
 
         Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.toMap(
                         org.springframework.validation.FieldError::getField,
-                        fieldError -> fieldError.getDefaultMessage() == null
-                                ? "不正な値です"
-                                : fieldError.getDefaultMessage(),
+                        fieldError ->
+                                fieldError.getDefaultMessage() == null ? "不正な値です" : fieldError.getDefaultMessage(),
                         (first, second) -> first,
                         LinkedHashMap::new));
         problem.setProperty("errors", errors);
@@ -82,8 +77,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleUnexpected(Exception ex) {
         ErrorCode code = ErrorCode.INTERNAL_ERROR;
-        ProblemDetail problem =
-                ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, code.title());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, code.title());
         problem.setType(URI.create(PROBLEM_BASE_URI + code.slug()));
         problem.setTitle(code.title());
 
