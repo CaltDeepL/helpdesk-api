@@ -3,13 +3,14 @@ package com.caltdeepl.helpdesk.architecture;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.library.Architectures;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 
 /**
  * アーキテクチャ制約をテストで強制する（NFR-5.1）。
@@ -80,7 +81,8 @@ class ArchitectureTest {
     @Test
     @DisplayName("Controller クラスの命名は Controller で終わる")
     void controllersAreNamedProperly() {
-        classes().that()
+        classes()
+                .that()
                 .resideInAPackage("..controller..")
                 .and()
                 .areNotNestedClasses()
