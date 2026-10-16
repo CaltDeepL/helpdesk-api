@@ -1,4 +1,4 @@
-# ADR-0002: Spring Boot 4.1 / Java 25 を採用する
+# ADR-0001: Spring Boot 4.1 / Java 25 を採用する
 
 - ステータス: Accepted
 - 日付: 2026-09-19
