@@ -520,7 +520,7 @@ docker compose up -d db
 | 11 | 集計 API | 応答時間・SLA 遵守率の算出 |
 | 12 | 可観測性 | 構造化ログ・追跡 ID・メトリクス |
 | 13 | OpenAPI | Swagger UI 公開、operationId の一意性をテスト |
-| 14 | デプロイ | CI green → 自動デプロイ、公開 URL で疎通 |
+| 14 | デプロイ（AWS / Terraform） | Terraform で AWS 環境を構築、CI green → 自動デプロイ、公開 URL で疎通 |
 | 15 | ネイティブイメージ（任意） | 起動時間の比較を README に記載 |
 
 ### ナレッジエージェント（#5 / #8 / #10 / #12 完了後に着手）
