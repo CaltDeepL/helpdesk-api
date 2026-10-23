@@ -285,7 +285,7 @@ git push origin v0.2.0
 
 ### 2.8 タスクごとの作業メモ
 
-ロードマップの各タスクは GitHub Issue（テンプレート「タスク」、ラベル `task`）で管理し、
+ロードマップの各タスクは GitHub Issue（テンプレート「タスク」、ラベル `task`。テンプレートは全リポジトリ共通で [CaltDeepL/.github](https://github.com/CaltDeepL/.github) にある）で管理し、
 作業メモは `docs/` ではなく **その Issue に記録する**。
 
 - タスク着手時に Issue があることを確認する（なければテンプレートから作成）
