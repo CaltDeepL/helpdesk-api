@@ -1,8 +1,8 @@
 ## 対応タスク / 要件
 
-<!-- 例: Task #1 / FR-2.1 / NFR-4.2。該当しない場合は「なし」。 -->
+<!-- 例: Closes #28 (Task #1) / FR-2.1 / NFR-4.2。該当しない場合は「なし」。 -->
 
-- Task:
+- Task: Closes #
 - Requirement:
 
 ## 目的
@@ -57,11 +57,11 @@ curl -fsS http://localhost:8082/actuator/health | jq .
 
 ## ドキュメント / 運用変更
 
-<!-- README、task doc、ADR、OpenAPI、.env.example、runbook など。 -->
+<!-- README、ADR、OpenAPI、.env.example、runbook など。作業メモは対応 Issue に書く。 -->
 
 - [ ] 該当なし
 - [ ] `README.md` を更新した
-- [ ] `docs/task-NN-*.md` を更新した
+- [ ] 対応 Issue の「作業メモ」を更新した
 - [ ] 必要な ADR を追加・更新した
 - [ ] `.env.example` を更新した
 - [ ] OpenAPI / API ドキュメントを更新した
