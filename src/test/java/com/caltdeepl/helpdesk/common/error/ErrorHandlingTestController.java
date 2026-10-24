@@ -3,6 +3,9 @@ package com.caltdeepl.helpdesk.common.error;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +40,21 @@ class ErrorHandlingTestController {
     @GetMapping("/unexpected")
     void unexpected() {
         throw new IllegalStateException(SECRET);
+    }
+
+    @GetMapping("/unauthenticated")
+    void unauthenticated() {
+        throw new InsufficientAuthenticationException(SECRET);
+    }
+
+    @GetMapping("/invalid-token")
+    void invalidToken() {
+        throw new InvalidBearerTokenException(SECRET);
+    }
+
+    @GetMapping("/forbidden")
+    void forbidden() {
+        throw new AccessDeniedException(SECRET);
     }
 
     record SampleRequest(@NotBlank(message = "名前は必須です") String name) {}

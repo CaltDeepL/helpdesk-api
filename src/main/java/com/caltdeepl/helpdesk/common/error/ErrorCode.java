@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
     VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "validation-failed", "入力値が不正です"),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "unauthorized", "認証が必要です"),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "invalid-credentials", "メールアドレスまたはパスワードが正しくありません"),
     FORBIDDEN(HttpStatus.FORBIDDEN, "forbidden", "権限がありません"),
     NOT_FOUND(HttpStatus.NOT_FOUND, "not-found", "リソースが見つかりません"),
     CONFLICT(HttpStatus.CONFLICT, "conflict", "リソースが競合しています"),

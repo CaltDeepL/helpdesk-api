@@ -22,7 +22,7 @@
 
 ## 現在の状態
 
-Task #1（エラーハンドリング基盤）まで完了。次は Task #2（認証）に進む。
+Task #2（認証）まで完了。次は Task #3（ユーザー・ロール）に進む。
 
 | 項目 | 状態 |
 | --- | --- |
@@ -33,6 +33,7 @@ Task #1（エラーハンドリング基盤）まで完了。次は Task #2（�
 | `main` ブランチ保護 | ✅ |
 | `AppException` / Bean Validation / 想定外例外が problem+json | ✅ |
 | エラー応答の `traceId`（W3C 32 桁 hex） | ✅ |
+| 登録・ログイン（JWT / HS256）と、不正トークンの 401（problem+json） | ✅ |
 
 ローカルのポート割り当て:
 
@@ -514,7 +515,7 @@ docker compose up -d db
 | --- | --- | --- |
 | 0 | ✅ **プロジェクト土台** | Compose healthy / health 200 + DB UP / Gradle check / CI / branch protection |
 | 1 | ✅ **エラーハンドリング基盤** | 独自例外が problem+json に変換されることをテストで確認 |
-| 2 | 認証（register / login / JWT） | 登録 201・ログイン 200・不正トークン 401 |
+| 2 | ✅ **認証（register / login / JWT）** | 登録 201・ログイン 200・不正トークン 401 |
 | 3 | ユーザー・ロール | `MANAGER` / `AGENT` の権限差がテストで確認できる |
 | 4 | カテゴリ CRUD | 結合テスト green |
 | 5 | チケット CRUD | 参照番号の採番を含め結合テスト green |

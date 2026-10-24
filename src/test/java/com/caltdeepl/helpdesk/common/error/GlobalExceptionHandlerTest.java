@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -150,6 +153,33 @@ class GlobalExceptionHandlerTest {
                 content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON),
                 jsonPath("$.instance").value("/__test/errors/unexpected"),
                 jsonPath("$.traceId", matchesPattern(TRACE_ID_PATTERN)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/__test/errors/unauthenticated", "/__test/errors/invalid-token"})
+    @DisplayName("Spring Security の認証失敗は 401 と WWW-Authenticate: Bearer を返し、例外の内容は返さない")
+    void authenticationFailureReturns401(String path) {
+        perform(
+                get(path),
+                status().isUnauthorized(),
+                header().string(HttpHeaders.WWW_AUTHENTICATE, "Bearer"),
+                content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON),
+                jsonPath("$.type").value("https://helpdesk.example.com/problems/unauthorized"),
+                jsonPath("$.instance").value(path),
+                jsonPath("$.traceId", matchesPattern(TRACE_ID_PATTERN)),
+                content().string(not(containsString(ErrorHandlingTestController.SECRET))));
+    }
+
+    @Test
+    @DisplayName("認可の失敗は 403 を返し、例外の内容は返さない")
+    void accessDeniedReturns403() {
+        perform(
+                get("/__test/errors/forbidden"),
+                status().isForbidden(),
+                content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON),
+                jsonPath("$.type").value("https://helpdesk.example.com/problems/forbidden"),
+                jsonPath("$.traceId", matchesPattern(TRACE_ID_PATTERN)),
+                content().string(not(containsString(ErrorHandlingTestController.SECRET))));
     }
 
     private void perform(MockHttpServletRequestBuilder request, ResultMatcher... matchers) {
