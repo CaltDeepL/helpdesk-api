@@ -15,7 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * <p>Spring Boot 4 では Flyway の自動設定が spring-boot-flyway に分かれており、flyway-core だけでは
  * マイグレーションが走らない。依存の欠落で再発しないよう、実 DB で検査する。
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest
 @Import(TestcontainersConfiguration.class)
 class FlywayMigrationIntegrationTest {
 

@@ -12,6 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -51,6 +54,33 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             LOG.warn("業務例外: code={} detail={}", code, ex.getMessage());
         }
         return ResponseEntity.status(code.status()).body(problem);
+    }
+
+    /**
+     * Spring Security の認証失敗（トークンの欠如・不正・期限切れ）。ProblemDetailsSecurityHandler から委ねられる。
+     *
+     * <p>失敗の内訳は攻撃の手がかりになるため返さない。RFC 6750 3 に従い {@code WWW-Authenticate: Bearer} を付ける。
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ProblemDetail> handleAuthentication(AuthenticationException ex) {
+        ErrorCode code = ErrorCode.UNAUTHORIZED;
+        String detail = ex instanceof OAuth2AuthenticationException
+                ? "アクセストークンが無効か、有効期限が切れています"
+                : "認証が必要です。Authorization ヘッダに Bearer トークンを付けてください";
+
+        LOG.info("認証に失敗しました: {}", ex.getClass().getSimpleName());
+        return ResponseEntity.status(code.status())
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer")
+                .body(problem(code, detail));
+    }
+
+    /** 認可の失敗。 */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleAccessDenied(AccessDeniedException ex) {
+        ErrorCode code = ErrorCode.FORBIDDEN;
+
+        LOG.info("認可に失敗しました");
+        return ResponseEntity.status(code.status()).body(problem(code, "この操作を行う権限がありません"));
     }
 
     /** Bean Validation のエラー。フィールド単位の内訳を errors に載せる。 */

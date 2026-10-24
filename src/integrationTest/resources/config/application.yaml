@@ -1,0 +1,6 @@
+# 結合テスト専用の設定。classpath:/config/ は main の application.yaml より優先される。
+# この鍵は結合テストでのみ使うダミー値で、ローカル・本番の JWT_SECRET とは無関係。
+app:
+  jwt:
+    secret: integration-test-only-secret-not-for-any-environment-0123456789
+    expiration-minutes: 60

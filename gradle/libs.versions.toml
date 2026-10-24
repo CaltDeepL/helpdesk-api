@@ -9,16 +9,12 @@ dependencyCheck = "13.0.0"
 springdoc = "3.1.1"
 archunit = "1.5.1"
 testcontainers = "1.21.4"
-jjwt = "0.13.0"
 logstashEncoder = "9.0"
 jacoco = "0.8.14"
 checkstyle = "14.1.0"
 [libraries]
 springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
 archunit = { module = "com.tngtech.archunit:archunit", version.ref = "archunit" }
-jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
-jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
-jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }
 logstash-encoder = { module = "net.logstash.logback:logstash-logback-encoder", version.ref = "logstashEncoder" }
 
 [plugins]

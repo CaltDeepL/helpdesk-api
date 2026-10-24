@@ -59,9 +59,8 @@ dependencies {
     implementation(libs.springdoc.openapi)
 
     // --- 認証 ---
-    implementation(libs.jjwt.api)
-    runtimeOnly(libs.jjwt.impl)
-    runtimeOnly(libs.jjwt.jackson)
+    // JWT の発行・検証は Spring Security の Resource Server（Nimbus）に任せる（ADR-0003）
+    implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
 
     // --- 構造化ログ ---
     implementation(libs.logstash.encoder)

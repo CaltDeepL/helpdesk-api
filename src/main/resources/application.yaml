@@ -67,7 +67,8 @@ springdoc:
 
 app:
   jwt:
-    secret: ${JWT_SECRET}
+    # 未設定・256 bit 未満なら起動時に失敗する（JwtProperties）
+    secret: ${JWT_SECRET:}
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
 
 logging:
