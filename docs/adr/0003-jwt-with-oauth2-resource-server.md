@@ -27,7 +27,7 @@ Task #2 で、登録・ログインと JWT アクセストークンによる認�
   - 標準の部品を使わない理由の説明が要る
   - 外部の IdP に移るときはフィルタを書き直す
 
-### 案 B: `spring-boot-starter-oauth2-resource-server`（Nimbus）を使う
+### 案 B: `spring-boot-starter-security-oauth2-resource-server`（Nimbus）を使う
 
 - 利点:
   - 検証は Spring Security 標準の `BearerTokenAuthenticationFilter` と `NimbusJwtDecoder` が担い、署名・期限・形式を実績あるコードで確かめられる
@@ -49,7 +49,7 @@ Task #2 で、登録・ログインと JWT アクセストークンによる認�
 
 ## 結果
 
-- jjwt（api / impl / jackson）を依存から外し、`spring-boot-starter-oauth2-resource-server` を追加する
+- jjwt（api / impl / jackson）を依存から外し、`spring-boot-starter-security-oauth2-resource-server` を追加する
 - 署名は HS256。鍵は環境変数 `JWT_SECRET`（`app.jwt.secret`）から読み、256 bit 以上を必須にする。足りなければ起動時に失敗させる
 - 有効期限は `app.jwt.expiration-minutes`。`sub` にユーザー ID、`role` にロールを入れる
 - 401 は自前の AuthenticationEntryPoint で problem+json + `traceId` にそろえる（ADR-0002 の残課題）
