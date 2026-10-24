@@ -22,7 +22,7 @@
 
 ## 現在の状態
 
-Task #0（プロジェクト土台）は完了。次は Task #1（エラーハンドリング基盤の検証）に進む。
+Task #1（エラーハンドリング基盤）まで完了。次は Task #2（認証）に進む。
 
 | 項目 | 状態 |
 | --- | --- |
@@ -31,6 +31,8 @@ Task #0（プロジェクト土台）は完了。次は Task #1（エラーハ�
 | `./gradlew check` | ✅ |
 | CI（Format / Lint / Test / Docker Build） | ✅ |
 | `main` ブランチ保護 | ✅ |
+| `AppException` / Bean Validation / 想定外例外が problem+json | ✅ |
+| エラー応答の `traceId`（W3C 32 桁 hex） | ✅ |
 
 ローカルのポート割り当て:
 
@@ -351,9 +353,13 @@ RFC 9457 (`application/problem+json`) に準拠する。
   "status": 422,
   "detail": "CLOSED から IN_PROGRESS へは遷移できません",
   "instance": "/api/tickets/42/status",
-  "traceId": "00-4bf92f...-01"
+  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
 }
 ```
+
+`traceId` は W3C Trace Context の 32 桁 hex（`traceparent` の第 2 フィールド）。すべてのエラー応答に付ける。
+クライアントが有効な `traceparent` を送ればその値を使い、無ければサーバーが発行する。
+分散トレーシング（Micrometer Tracing）への切り替えは Task #12。
 
 | HTTP | 用途 |
 | --- | --- |
@@ -364,7 +370,7 @@ RFC 9457 (`application/problem+json`) に準拠する。
 | 409 | 一意制約違反 |
 | 422 | ドメインルール違反（不正な状態遷移など） |
 
-5xx の場合、内部情報は返さず `traceId` のみを返す。
+5xx の場合、内部情報は返さず `traceId` と固定の title / detail のみを返す。
 
 ### 4.3 API バージョニング
 
@@ -507,7 +513,7 @@ docker compose up -d db
 | # | タスク | 完了条件 |
 | --- | --- | --- |
 | 0 | ✅ **プロジェクト土台** | Compose healthy / health 200 + DB UP / Gradle check / CI / branch protection |
-| 1 | エラーハンドリング基盤 | 独自例外が problem+json に変換されることをテストで確認 |
+| 1 | ✅ **エラーハンドリング基盤** | 独自例外が problem+json に変換されることをテストで確認 |
 | 2 | 認証（register / login / JWT） | 登録 201・ログイン 200・不正トークン 401 |
 | 3 | ユーザー・ロール | `MANAGER` / `AGENT` の権限差がテストで確認できる |
 | 4 | カテゴリ CRUD | 結合テスト green |
