@@ -53,8 +53,9 @@ Task #2 で、登録・ログインと JWT アクセストークンによる認�
 - 署名は HS256。鍵は環境変数 `JWT_SECRET`（`app.jwt.secret`）から読み、256 bit 以上を必須にする。足りなければ起動時に失敗させる
 - 有効期限は `app.jwt.expiration-minutes`。`sub` にユーザー ID、`role` にロールを入れる
 - 401 は自前の AuthenticationEntryPoint で problem+json + `traceId` にそろえる（ADR-0002 の残課題）
+- CSRF 保護は無効にする。認証は `Authorization: Bearer` ヘッダだけで、セッションも Cookie も発行しないため、ブラウザが認証情報を自動で送る CSRF の前提が成り立たない。Cookie を発行しないことは結合テスト（`AuthIntegrationTest.noCookieIsIssued`）で検査する。CodeQL の `java/spring-disabled-csrf-protection` は、この理由で誤検知として扱う
 - 受け入れた欠点: 鍵は単一の共有秘密で、鍵のローテーションは扱わない
-- 見直す条件: 外部の IdP を使うことになったとき、または複数のサービスでトークンを検証することになったときは、RS256 と JWKS 公開に切り替える。その際は新しい ADR を書く
+- 見直す条件: 外部の IdP を使うことになったとき、または複数のサービスでトークンを検証することになったときは、RS256 と JWKS 公開に切り替える。その際は新しい ADR を書く。Cookie で認証する機能（ブラウザ向けの画面など）を入れるときは、CSRF 保護を有効にし直す
 
 ## 参照
 

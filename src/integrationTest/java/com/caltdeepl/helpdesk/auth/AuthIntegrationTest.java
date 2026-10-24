@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -128,6 +129,27 @@ class AuthIntegrationTest {
         DocumentContext meBody = JsonPath.parse(me.getBody());
         assertThat(meBody.read("$.email", String.class)).isEqualTo(email);
         assertThat(meBody.read("$.role", String.class)).isEqualTo("AGENT");
+    }
+
+    /**
+     * CSRF 保護を無効にしている前提（SecurityConfig / ADR-0003）を検査する。
+     *
+     * <p>認証は Authorization ヘッダだけで、ブラウザが自動で送る Cookie を発行しない。Cookie を発行するようになったら CSRF
+     * 保護を見直す必要があるため、このテストが落ちる。
+     */
+    @Test
+    @DisplayName("登録・ログイン・認証済みリクエスト・認証失敗のどれも Cookie を発行しない（CSRF 無効の前提）")
+    void noCookieIsIssued() {
+        String email = uniqueEmail();
+        ResponseEntity<String> registered = register(email, PASSWORD, "Alice");
+        ResponseEntity<String> login = login(email, PASSWORD);
+        String token = JsonPath.parse(login.getBody()).read("$.accessToken", String.class);
+        ResponseEntity<String> me = me("Bearer " + token);
+        ResponseEntity<String> unauthorized = me(null);
+
+        for (ResponseEntity<String> response : List.of(registered, login, me, unauthorized)) {
+            assertThat(response.getHeaders().get(HttpHeaders.SET_COOKIE)).isNullOrEmpty();
+        }
     }
 
     @Test

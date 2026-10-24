@@ -14,7 +14,9 @@ import org.springframework.security.web.SecurityFilterChain;
 /**
  * 認証の方針: ステートレスな Bearer トークン（JWT）。登録・ログイン・ヘルスチェック・API ドキュメント以外は認証必須（FR-1.3）。
  *
- * <p>Cookie を使わないため CSRF 対策は無効にする。
+ * <p>CSRF 保護は無効にする（ADR-0003）。CSRF はブラウザが自動で送る認証情報（Cookie など）を悪用する攻撃で、この API の認証は
+ * {@code Authorization: Bearer} ヘッダだけ、セッションも Cookie も発行しない。この前提は AuthIntegrationTest の
+ * noCookieIsIssued で検査する。Cookie で認証する機能を入れるときは、CSRF 保護を有効にし直す。
  */
 @Configuration(proxyBeanMethods = false)
 public class SecurityConfig {
