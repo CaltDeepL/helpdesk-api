@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import com.caltdeepl.helpdesk.common.observability.TraceId;
+
 /**
  * 例外を RFC 9457 (application/problem+json) に一元変換する。
  *
@@ -25,7 +27,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  *
  * <ul>
  *   <li>4xx はクライアントが原因のため、原因が分かる detail を返す
- *   <li>5xx は内部情報を漏らさず、追跡用の traceId のみ返す
+ *   <li>5xx は内部情報を漏らさず、固定の title / detail のみ返す
+ *   <li>traceId はすべてのエラー応答に付け、ログの MDC と突き合わせる
  *   <li>スタックトレースは必ずログ側に出す（レスポンスには絶対に含めない）
  * </ul>
  */
@@ -39,9 +42,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ProblemDetail> handleAppException(AppException ex) {
         ErrorCode code = ex.code();
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(code.status(), ex.getMessage());
-        problem.setType(URI.create(PROBLEM_BASE_URI + code.slug()));
-        problem.setTitle(code.title());
+        String detail = code.status().is5xxServerError() ? code.title() : ex.getMessage();
+        ProblemDetail problem = problem(code, detail);
 
         if (code.status().is5xxServerError()) {
             LOG.error("業務例外(5xx): code={}", code, ex);
@@ -57,9 +59,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 
         ErrorCode code = ErrorCode.VALIDATION_FAILED;
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(code.status(), "入力値の検証に失敗しました");
-        problem.setType(URI.create(PROBLEM_BASE_URI + code.slug()));
-        problem.setTitle(code.title());
+        ProblemDetail problem = problem(code, "入力値の検証に失敗しました");
 
         Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.toMap(
@@ -77,11 +77,32 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleUnexpected(Exception ex) {
         ErrorCode code = ErrorCode.INTERNAL_ERROR;
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, code.title());
-        problem.setType(URI.create(PROBLEM_BASE_URI + code.slug()));
-        problem.setTitle(code.title());
+        ProblemDetail problem = problem(code, code.title());
 
         LOG.error("想定外の例外が発生しました", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problem);
+    }
+
+    /** Spring MVC が扱う例外にも traceId を付ける。 */
+    @Override
+    protected ResponseEntity<Object> handleExceptionInternal(
+            Exception ex, Object body, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
+        ResponseEntity<Object> response = super.handleExceptionInternal(ex, body, headers, statusCode, request);
+        if (response.getBody() instanceof ProblemDetail problem) {
+            applyTraceId(problem);
+        }
+        return response;
+    }
+
+    private static ProblemDetail problem(ErrorCode code, String detail) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(code.status(), detail);
+        problem.setType(URI.create(PROBLEM_BASE_URI + code.slug()));
+        problem.setTitle(code.title());
+        applyTraceId(problem);
+        return problem;
+    }
+
+    private static void applyTraceId(ProblemDetail problem) {
+        problem.setProperty("traceId", TraceId.current());
     }
 }
