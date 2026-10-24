@@ -36,6 +36,7 @@ README 4.2 は W3C Trace Context の 32 桁 hex `trace-id` を想定している
 - `TraceId` / `TraceIdFilter` が追跡 ID の発行と MDC への載せる処理を担う
 - Task #12 で Micrometer Tracing に切り替える。そのとき応答フィールド名と 32 桁 hex の形は維持する
 - コンソールログは `%X{traceId:-}` で突き合わせる。JSON 構造化は Task #12
+- フィルター層で起きるエラー（Spring Security が返す 401 / 403、サーブレットコンテナの `/error`）は、まだ problem+json ではなく `traceId` も付かない。Task #2 で認証を入れるとき、AuthenticationEntryPoint と AccessDeniedHandler を problem+json にそろえる
 
 ## 参照
 

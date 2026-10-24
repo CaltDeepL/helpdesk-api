@@ -58,7 +58,12 @@ public final class TraceId {
         return traceId;
     }
 
-    /** MDC の trace-id。未設定なら新規発行する。 */
+    /**
+     * MDC の trace-id。未設定なら新規発行する。
+     *
+     * <p>MDC が空になるのは {@link TraceIdFilter} を通らない経路だけ（フィルターを組み込まないテストなど）。その場合に発行した ID
+     * はログには出ないため、ログとの突き合わせはフィルターを通るリクエストでのみ成り立つ。
+     */
     public static String current() {
         String id = MDC.get(MDC_KEY);
         if (id == null || id.isBlank()) {

@@ -141,6 +141,17 @@ class GlobalExceptionHandlerTest {
                 jsonPath("$.traceId", matchesPattern(TRACE_ID_PATTERN)));
     }
 
+    @Test
+    @DisplayName("許可されていないメソッドなど、Spring が扱う別のエラーにも traceId が付く")
+    void methodNotAllowedIncludesTraceId() {
+        perform(
+                post("/__test/errors/unexpected"),
+                status().isMethodNotAllowed(),
+                content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON),
+                jsonPath("$.instance").value("/__test/errors/unexpected"),
+                jsonPath("$.traceId", matchesPattern(TRACE_ID_PATTERN)));
+    }
+
     private void perform(MockHttpServletRequestBuilder request, ResultMatcher... matchers) {
         try {
             var actions = mockMvc.perform(request);
