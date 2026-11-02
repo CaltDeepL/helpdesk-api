@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-AI エージェント（Claude Code・Cursor など）向けの作業ガイド。人向けの詳細は README.md と CONTRIBUTING.md を正とする。
+AI エージェント（Claude Code など）向けの作業ガイド。人向けの詳細は README.md と CONTRIBUTING.md を正とする。
 
 ## プロジェクト
 
