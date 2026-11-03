@@ -28,26 +28,30 @@
 
 ```
 com.caltdeepl.helpdesk
-├── HelpdeskApplication.java
+├── HelpdeskApiApplication.java
 ├── common/                  # 機能をまたいで共有するもののみ
-│   ├── config/
 │   ├── error/
-│   └── security/
+│   ├── observability/
+│   ├── security/
+│   └── time/
 ├── auth/
 │   ├── controller/
-│   ├── service/
-│   ├── repository/
-│   └── dto/
+│   └── service/
 ├── user/
-├── ticket/
 │   ├── controller/
 │   ├── service/
 │   ├── repository/
-│   ├── domain/              # 状態遷移などの純粋なドメインロジック
-│   ├── entity/
-│   └── dto/
-└── analytics/
+│   └── domain/              # エンティティと enum
+├── ticket/                  # Task #5 以降
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   └── domain/              # エンティティと、状態遷移などの純粋なドメインロジック
+└── analytics/               # Task #11
 ```
+
+リクエスト・レスポンスの型は controller 内の `record`、controller に渡す読み取り用の型は service の `XxxView` として置く。
+`dto/` パッケージは作らない。
 
 `common` は「2 つ以上の機能から使われることが確定してから」置く。
 最初から共通化しない。

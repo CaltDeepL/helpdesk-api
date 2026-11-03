@@ -67,7 +67,7 @@ Task #2（認証）まで完了。次は Task #3（ユーザー・ロール）�
 
 注文もカスタマーサポートの問い合わせも、「受けた依頼を記録し、担当を割り当て、完了まで追跡する」という
 同じ構造を持つ。この課題をシステムで解決するために本 API を開発している。
-詳しくは [連載第1回](【Zenn記事のURL】) を参照。
+詳しくは [連載第1回](https://zenn.dev/zennpay/articles/657dfaafd28f4f) を参照。
 
 ### 背景
 
@@ -471,7 +471,7 @@ docker compose up -d db
 | `./gradlew check` | Lint・単体テストなど通常の品質ゲートを実行 |
 | `./gradlew test` | 単体テスト |
 | `./gradlew integrationTest` | Testcontainers を用いた結合テスト |
-| `./gradlew jacocoTestCoverageVerification` | カバレッジ閾値チェック（Task #0 時点では無効） |
+| `./gradlew jacocoTestCoverageVerification` | カバレッジ閾値チェック（現在は無効） |
 | `./gradlew dependencyCheckAnalyze` | OWASP Dependency-Check |
 
 ### 主要 URL
