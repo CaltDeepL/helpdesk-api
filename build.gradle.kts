@@ -169,7 +169,7 @@ tasks.jacocoTestCoverageVerification {
             }
         }
     }
-    // 土台段階ではコードが少なく閾値を満たせないため、タスク #2 以降で有効化する
+    // 未有効。単体テストだけで閾値を安定して満たせるようになってから有効にする
     enabled = false
 }
 
